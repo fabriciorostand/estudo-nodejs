@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const UserModel = require('../src/models/user.model');
+const { login } = require('../src/controllers/login.controller');
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.get('/users', async (req, res) => {
         return res.status(500).send(error.message);
     }
 });
+
+app.post('/login', login);
 
 app.get('/users/:id', async (req, res) => {
     try {
