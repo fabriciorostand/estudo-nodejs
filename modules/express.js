@@ -5,6 +5,15 @@ const { login } = require('../src/controllers/login.controller');
 
 const app = express();
 
+if (process.env.NODE_ENV === 'production') {
+    app.use((req, res, next) => {
+        if (req.protocol === 'http') {
+            return res.redirect(301, `https://${req.headers.host}${req.url}`);
+        }
+        next();
+    });
+}
+
 app.use(express.json());
 app.use(cors());
 
@@ -74,6 +83,6 @@ app.delete('/users/:id', async (req, res) => {
     }
 });  
 
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 app.listen(port, () => console.log(`Rodando com Express na porta ${port}!`));
