@@ -51,13 +51,18 @@ app.get('/users/:id', async (req, res) => {
 
 app.post('/users', async (req, res) => {
     try {
-        const user = await UserModel.create(req.body);
+        const existingUser = await UserModel.findOne({ email: req.body.email });
+        if (existingUser) {
+            return res.status(409).json({ message: 'O e-mail já foi utilizado para cadastrar uma conta.' });
+        }
 
+        const user = await UserModel.create(req.body);
         res.status(201).json(user);
     } catch (error) {
         res.status(500).send(error.message);
     }
-})
+});
+
 
 app.patch('/users/:id', async (req, res) => {
     try {
