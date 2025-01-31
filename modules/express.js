@@ -7,7 +7,7 @@ const app = express();
 
 if (process.env.NODE_ENV === 'production') {
     app.use((req, res, next) => {
-        if (req.protocol === 'http') {
+        if (req.headers['x-forwarded-proto'] !== 'https') {
             return res.redirect(301, `https://${req.headers.host}${req.url}`);
         }
         next();
@@ -24,6 +24,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Middleware de Logging
 app.use((req, res, next) => {
     console.log(`Request Type: ${req.method}`);
     console.log(`Content Type: ${req.headers["content-type"]}`);
@@ -38,6 +39,7 @@ app.post('/login', (req, res, next) => {
     next();
 }, login);
 
+// Outras Rotas
 app.get('/users', async (req, res) => {
     try {
         const users = await UserModel.find({});
