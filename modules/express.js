@@ -15,7 +15,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use(express.json());
-app.use(cors());
+
+const corsOptions = {
+    origin: 'https://fabriciorostand.github.io',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
     console.log(`Request Type: ${req.method}`);
