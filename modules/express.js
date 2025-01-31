@@ -51,9 +51,15 @@ app.get('/users/:id', async (req, res) => {
 
 app.post('/users', async (req, res) => {
     try {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!emailRegex.test(req.body.email)) {
+            return res.status(400).json({ message: 'O e-mail fornecido é inválido.' });
+        }
+        
         const existingUser = await UserModel.findOne({ email: req.body.email });
         if (existingUser) {
-            return res.status(409).json({ message: 'O e-mail já foi utilizado para cadastrar uma conta.' });
+            return res.status(409).json({ message: 'Este e-mail já foi usado para cadastrar uma conta.' });
         }
 
         const user = await UserModel.create(req.body);
@@ -62,7 +68,6 @@ app.post('/users', async (req, res) => {
         res.status(500).send(error.message);
     }
 });
-
 
 app.patch('/users/:id', async (req, res) => {
     try {
