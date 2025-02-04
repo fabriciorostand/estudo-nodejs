@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const UserModel = require('../src/models/user.model');
 const { login } = require('../src/controllers/login.controller');
 
@@ -16,9 +17,18 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(express.json());
 
-// Configuração do CORS
+// Configuração dinâmica do CORS
+const allowedOrigins = ['https://fabriciorostand.github.io', 'http://localhost:5173'];
 const corsOptions = {
-    origin: 'https://fabriciorostand.github.io',
+    origin: function (origin, callback) {
+        // Permitir requisições sem origem (como Postman)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 };
@@ -72,7 +82,16 @@ app.post('/users', async (req, res) => {
             return res.status(409).json({ message: 'Este e-mail já foi usado para cadastrar uma conta.' });
         }
 
-        const user = await UserModel.create(req.body);
+        const salt = await bcrypt.genSalt(10); // Gera um sal com 10 rounds
+        const hashedPassword = await bcrypt.hash(req.body.password, salt); // Hasheia a senha com o sal
+
+        const user = new UserModel({
+            email: req.body.email,
+            password: hashedPassword, // Armazena a senha hasheada
+            name: req.body.name
+        });
+
+        await user.save();
         res.status(201).json(user);
     } catch (error) {
         res.status(500).send(error.message);
