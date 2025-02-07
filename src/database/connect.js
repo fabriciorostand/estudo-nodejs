@@ -7,6 +7,6 @@ const connectToDatabase = async () => {
     } catch (error) {
         console.log('Ocorreu um erro ao tentar se conectar com o banco de dados: ', error);
     }
-}
+};
 
 module.exports = connectToDatabase;
