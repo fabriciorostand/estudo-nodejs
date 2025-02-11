@@ -1,6 +1,6 @@
 const UserModel = require('../models/user.model');
 const bcrypt = require('bcrypt');
-const generateToken = require('../services/auth.service'); // Ajuste o caminho conforme necessário
+const generateToken = require('../services/auth.service'); 
 
 const getAllUsers = async (req, res) => {
     try {
@@ -43,7 +43,8 @@ const createUser = async (req, res) => {
             email: req.body.email,
             password: hashedPassword, // Armazena a senha hasheada
             name: req.body.name,
-            role: req.body.role // Certifique-se de que o papel está incluído
+            role: req.body.role, // Certifique-se de que o papel está incluído
+            profilePic: req.body.profilePic // Adicione a propriedade profilePic
         });
 
         await user.save();
@@ -76,6 +77,10 @@ const updateUser = async (req, res) => {
             user.password = await bcrypt.hash(req.body.password, salt);
         }
 
+        if (req.body.profilePic) {
+            user.profilePic = req.body.profilePic;
+        }
+
         await user.save();
         res.status(200).json({ message: 'Usuário atualizado com sucesso', user });
     } catch (error) {
@@ -100,10 +105,23 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const uploadProfilePic = async (req, res) => {
+    try {
+        const userId = req.user.id; // Assumindo que você tem a autenticação configurada
+        const user = await UserModel.findById(userId);
+        user.profilePic = req.file.path;
+        await user.save();
+        res.status(200).json({ message: 'Foto de perfil atualizada com sucesso!', profilePic: user.profilePic });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao atualizar foto de perfil', error: error.message });
+    }
+};
+
 module.exports = {
     getAllUsers,
     getUserById,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    uploadProfilePic
 };
