@@ -1,6 +1,8 @@
 const UserModel = require('../models/user.model');
 const bcrypt = require('bcrypt');
-const generateToken = require('../services/auth.service'); 
+const generateToken = require('../services/auth.service'); // Ajuste o caminho conforme necessário
+const fs = require('fs');
+const path = require('path');
 
 const getAllUsers = async (req, res) => {
     try {
@@ -15,7 +17,10 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const id = req.params.id;
-        const user = await UserModel.findById(id);
+        const user = await UserModel.findById(id, 'name email profilePic'); // Inclua o campo profilePic aqui
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
         res.status(200).json(user);
     } catch (error) {
         console.error('Erro ao obter usuário por ID:', error.message);
@@ -64,7 +69,7 @@ const updateUser = async (req, res) => {
             return res.status(404).json({ message: 'Usuário não encontrado' });
         }
 
-        if (req.user.userId !== id && req.user.role !== 'admin') {
+        if (req.user.id !== id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Acesso não autorizado' });
         }
 
@@ -107,12 +112,40 @@ const deleteUser = async (req, res) => {
 
 const uploadProfilePic = async (req, res) => {
     try {
-        const userId = req.user.id; // Assumindo que você tem a autenticação configurada
+        console.log(`Requisição recebida para upload de foto de perfil de usuário: ${req.user ? req.user.id : 'undefined'}`);
+        if (!req.user || !req.user.id) {
+            console.error('Usuário não autenticado');
+            return res.status(401).json({ message: 'Usuário não autenticado' });
+        }
+
+        const userId = req.user.id;
+        console.log(`Processando upload de foto de perfil para o usuário com ID: ${userId}`);
+
         const user = await UserModel.findById(userId);
-        user.profilePic = req.file.path;
+        if (!user) {
+            console.error(`Usuário com ID ${userId} não encontrado`);
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        // Apagar a imagem antiga, se existir
+        if (user.profilePic) {
+            const oldImagePath = path.resolve(user.profilePic);
+            console.log(`Tentando apagar a imagem antiga: ${oldImagePath}`);
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+                console.log(`Imagem antiga apagada: ${oldImagePath}`);
+            } else {
+                console.log(`Imagem antiga não encontrada: ${oldImagePath}`);
+            }
+        }
+
+        user.profilePic = req.file.path; // Salvar o caminho da nova imagem no banco de dados
         await user.save();
+
+        console.log(`Foto de perfil atualizada com sucesso para o usuário com ID: ${userId}`);
         res.status(200).json({ message: 'Foto de perfil atualizada com sucesso!', profilePic: user.profilePic });
     } catch (error) {
+        console.error('Erro ao atualizar foto de perfil:', error.message);
         res.status(500).json({ message: 'Erro ao atualizar foto de perfil', error: error.message });
     }
 };

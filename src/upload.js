@@ -6,6 +6,7 @@ const fs = require('fs');
 const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`Diretório criado: ${uploadDir}`);
 }
 
 const storage = multer.diskStorage({

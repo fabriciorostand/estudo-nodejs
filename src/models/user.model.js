@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlenght: 8,
     },
+    profilePic: {
+        type: String,
+    },
 });
 
 const UserModel = mongoose.model('User', userSchema);

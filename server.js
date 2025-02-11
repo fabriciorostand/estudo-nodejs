@@ -1,6 +1,7 @@
 const dotenv = require('dotenv');
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Importação adicional
 const connectToDatabase = require('./src/database/connect');
 const userRoutes = require('./src/routes/user.routes');
 const loginRoutes = require('./src/routes/login.routes');
@@ -32,6 +33,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Middleware para servir arquivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware de Logging
 app.use((req, res, next) => {

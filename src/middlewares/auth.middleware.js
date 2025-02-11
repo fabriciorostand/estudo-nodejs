@@ -5,6 +5,7 @@ const authMiddleware = (req, res, next) => {
     
     // Verifique se o header Authorization está presente
     if (!authHeader) {
+        console.error('Token de autenticação não fornecido');
         return res.status(401).json({ error: 'Token de autenticação não fornecido' });
     }
 
@@ -12,9 +13,11 @@ const authMiddleware = (req, res, next) => {
     
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        console.log(`Token decodificado com sucesso: ${JSON.stringify(decoded)}`);
+        req.user = { id: decoded.userId, role: decoded.role };
         next();
     } catch (error) {
+        console.error('Token inválido ou expirado:', error.message);
         return res.status(401).json({ error: 'Token inválido ou expirado' });
     }
 };
