@@ -7,7 +7,8 @@ const getAllUsers = async (req, res) => {
         const users = await UserModel.find({});
         res.status(200).json(users);
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error('Erro ao obter todos os usuários:', error.message);
+        res.status(500).json({ message: 'Erro ao obter usuários', error: error.message });
     }
 };
 
@@ -17,7 +18,8 @@ const getUserById = async (req, res) => {
         const user = await UserModel.findById(id);
         res.status(200).json(user);
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error('Erro ao obter usuário por ID:', error.message);
+        res.status(500).json({ message: 'Erro ao obter usuário', error: error.message });
     }
 };
 
@@ -48,27 +50,53 @@ const createUser = async (req, res) => {
         const token = generateToken(user); // Gera o token para o novo usuário
         res.status(201).json({ user, token });
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error('Erro ao criar usuário:', error.message);
+        res.status(500).json({ message: 'Erro ao criar usuário', error: error.message });
     }
 };
 
 const updateUser = async (req, res) => {
     try {
         const id = req.params.id;
-        const user = await UserModel.findByIdAndUpdate(id, req.body, { new: true });
-        res.status(200).json(user);
+        const user = await UserModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        if (req.user.userId !== id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Acesso não autorizado' });
+        }
+
+        if (req.body.name) {
+            user.name = req.body.name;
+        }
+
+        if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(req.body.password, salt);
+        }
+
+        await user.save();
+        res.status(200).json({ message: 'Usuário atualizado com sucesso', user });
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error('Erro ao atualizar usuário:', error.message);
+        res.status(500).json({ message: 'Erro ao atualizar usuário', error: error.message });
     }
 };
 
 const deleteUser = async (req, res) => {
     try {
         const id = req.params.id;
-        const user = await UserModel.findByIdAndDelete(id);
-        res.status(200).json(user);
+        const user = await UserModel.findByIdAndDelete(id); // Usar findByIdAndDelete para deletar o usuário
+        if (!user) {
+            console.error(`Usuário com ID ${id} não encontrado`);
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+        console.log(`Usuário com ID ${id} deletado com sucesso.`);
+        res.status(200).json({ message: 'Usuário removido com sucesso' });
     } catch (error) {
-        res.status(500).send(error.message);
+        console.error(`Erro ao excluir usuário com ID ${id}:`, error);
+        res.status(500).json({ message: 'Erro ao excluir usuário', error: error.message });
     }
 };
 
