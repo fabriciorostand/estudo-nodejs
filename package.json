@@ -4,7 +4,8 @@
   "description": "Curso de Node.js",
   "main": "server.js",
   "scripts": {
-    "start:dev": "nodemon server.js"
+    "start": "node server.js",           
+    "start:dev": "nodemon server.js"     
   },
   "author": "",
   "license": "ISC",
